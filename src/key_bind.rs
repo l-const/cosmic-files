@@ -3,6 +3,7 @@ use cosmic::{
     iced_core::keyboard::key::Named,
     widget::menu::key_bind::{KeyBind, Modifier},
 };
+use smol_str::SmolStr;
 use std::collections::HashMap;
 
 use crate::app::Action;
@@ -20,6 +21,31 @@ pub fn key_binds() -> HashMap<KeyBind, Action> {
                 },
                 Action::$action,
             );
+            match $key {
+                Key::Character::<SmolStr>(character) => {
+                    let character: Option<char> = character.as_str().chars().into_iter().next();
+                    if let Some(character) = character {
+                        let is_alphabetic = character.clone().is_alphabetic();
+                        let character_str = if is_alphabetic && character.clone().is_uppercase() {
+                            Some(character.clone().to_lowercase().to_string())
+                        } else if is_alphabetic && character.clone().is_lowercase() {
+                            Some(character.clone().to_uppercase().to_string())
+                        } else {
+                            None
+                        };
+                        if let Some(character_str) = character_str {
+                            key_binds.insert(
+                                KeyBind {
+                                    modifiers: vec![$(Modifier::$modifier),*],
+                                    key: Key::Character(character_str.as_str().into()),
+                                },
+                                Action::$action,
+                            );
+                        }
+                    }
+                }
+                _ => {}
+            }
         }};
     }
 
